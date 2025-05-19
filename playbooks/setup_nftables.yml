@@ -32,23 +32,24 @@
         path: /usr/lib/systemd/system/nftables.service
       register: nft_service
 
-    - name: ✅ Intentar habilitar y arrancar nftables con systemd (opcional)
+    - name: ✅ Intentar habilitar y arrancar nftables con systemd (si existe)
       systemd:
         name: nftables
         enabled: true
         state: started
       register: nft_start_result
       failed_when: false
-      when: nft_service.stat.exists | default(false)
+      when: nft_service.stat.exists
 
-    - name: 🚀 Aplicar reglas directamente con nft como respaldo
+    - name: 🚀 Aplicar reglas manualmente con nft si el servicio no arranca o no existe
       command: "nft -f {{ nftables_config_path }}"
       when: nft_start_result is not defined or nft_start_result.failed
 
-    - name: 🔍 Verificar reglas cargadas
+    - name: 🧪 Verificar reglas activas
       command: "nft list ruleset"
       register: nft_rules_output
+      changed_when: false
 
-    - name: 🖨️ Mostrar reglas activas
+    - name: 🖨️ Mostrar reglas activas (debug)
       debug:
         var: nft_rules_output.stdout_lines
