@@ -1,0 +1,37 @@
+# playbooks\setup_nftables.yml
+---
+- name: 🔧 Instalar y aplicar configuración completa de nftables en los nodos de Traefik
+  hosts: load_balancers
+  become: true
+
+  vars:
+    nftables_config_path: /etc/sysconfig/nftables.conf
+
+  tasks:
+    - name: 📦 Instalar nftables si no está presente
+      package:
+        name: nftables
+        state: present
+
+    - name: 📁 Asegurar directorio de configuración
+      file:
+        path: "{{ nftables_config_path | dirname }}"
+        state: directory
+        mode: "0755"
+
+    - name: 📄 Copiar archivo de configuración nftables.conf
+      copy:
+        src: "../files/nftables.conf"
+        dest: "{{ nftables_config_path }}"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: ✅ Habilitar y arrancar nftables
+      systemd:
+        name: nftables
+        enabled: true
+        state: started
+
+    - name: 🚀 Aplicar reglas con nft directamente
+      command: "nft -f {{ nftables_config_path }}"
