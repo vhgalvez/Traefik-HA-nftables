@@ -1,4 +1,4 @@
-# playbooks\setup_nftables.yml
+# playbooks/setup_nftables.yml
 ---
 - name: 🔧 Instalar y aplicar configuración completa de nftables en los nodos de Traefik
   hosts: load_balancers
@@ -27,11 +27,19 @@
         group: root
         mode: "0644"
 
-    - name: ✅ Habilitar y arrancar nftables
+    - name: 🔍 Verificar si el servicio nftables existe
+      stat:
+        path: /usr/lib/systemd/system/nftables.service
+      register: nft_service
+      failed_when: false
+
+    - name: ✅ Habilitar y arrancar nftables vía systemd (si existe)
       systemd:
         name: nftables
         enabled: true
         state: started
+      when: nft_service.stat.exists | default(false)
 
-    - name: 🚀 Aplicar reglas con nft directamente
-      command: "nft -f {{ nftables_config_path }}"
+    - name: 🚀 Aplicar reglas directamente con nft si no hay systemd
+      command: nft -f {{ nftables_config_path }}
+      when: not (nft_service.stat.exists | default(false))
