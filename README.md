@@ -108,3 +108,80 @@ sudo ip route add 10.42.0.0/16 via 10.17.4.21 dev eth0
 ## Licencia
 
 Este proyecto está licenciado bajo los términos especificados en el archivo `LICENSE`.
+
+
+
+🎯 Objetivo
+Permitir que los balanceadores externos (load_balancer1, load_balancer2) puedan enrutar tráfico hacia los pods de cada nodo mediante rutas estáticas por subred.
+
+
+
+
+
+
+
+✅ Comandos para load_balancer1 (IP: 10.17.3.12)
+bash
+Copiar
+Editar
+# worker1
+sudo ip route add 10.42.0.0/24 via 10.17.4.24 dev eth0 onlink
+
+# master1
+sudo ip route add 10.42.1.0/24 via 10.17.4.21 dev eth0 onlink
+
+# master2
+sudo ip route add 10.42.3.0/24 via 10.17.4.22 dev eth0 onlink
+
+# master3
+sudo ip route add 10.42.4.0/24 via 10.17.4.23 dev eth0 onlink
+
+# worker3 (tú estás en este nodo)
+sudo ip route add 10.42.5.0/24 via 10.17.4.26 dev eth0 onlink
+
+# worker2
+sudo ip route add 10.42.6.0/24 via 10.17.4.25 dev eth0 onlink
+sudo ip route add 10.42.9.0/24 via 10.17.4.25 dev eth0 onlink
+✅ Comandos para load_balancer2 (IP: 10.17.3.13)
+Iguales a los anteriores:
+
+bash
+Copiar
+Editar
+# worker1
+sudo ip route add 10.42.0.0/24 via 10.17.4.24 dev eth0 onlink
+
+# master1
+sudo ip route add 10.42.1.0/24 via 10.17.4.21 dev eth0 onlink
+
+# master2
+sudo ip route add 10.42.3.0/24 via 10.17.4.22 dev eth0 onlink
+
+# master3
+sudo ip route add 10.42.4.0/24 via 10.17.4.23 dev eth0 onlink
+
+# worker3
+sudo ip route add 10.42.5.0/24 via 10.17.4.26 dev eth0 onlink
+
+# worker2
+sudo ip route add 10.42.6.0/24 via 10.17.4.25 dev eth0 onlink
+sudo ip route add 10.42.9.0/24 via 10.17.4.25 dev eth0 onlink
+🧪 Verificación
+Después de añadir todas las rutas en ambos balanceadores, prueba desde load_balancer1:
+
+bash
+Copiar
+Editar
+ping -c 4 10.42.9.206
+Y también:
+
+bash
+Copiar
+Editar
+curl http://10.42.9.206:8080  # si Jenkins escucha ahí
+
+
+
+
+
+
